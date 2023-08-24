@@ -11,17 +11,17 @@ resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
   assume_role_policy = jsonencode({
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-})
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "lambda.amazonaws.com"
+        },
+        "Effect" : "Allow"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_policy" "iam_policy_crc" {
@@ -53,6 +53,12 @@ resource "aws_iam_policy" "iam_policy_crc" {
         },
       ]
   })
+}
+
+resource "aws_s3_bucket" "dev_bucket" {
+  provider = aws.aws-s3
+  bucket = "crc-dev-bucket-captain"
+  acl    = "private"
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {

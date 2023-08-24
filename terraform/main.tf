@@ -1,3 +1,4 @@
+//Define lamba function environment
 resource "aws_lambda_function" "visitor-count" {
   filename         = data.archive_file.zip_python_file.output_path
   source_code_hash = data.archive_file.zip_python_file.output_base64sha256
@@ -7,6 +8,7 @@ resource "aws_lambda_function" "visitor-count" {
   runtime          = "python3.11"
 }
 
+//Create IAM Role
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -24,6 +26,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   })
 }
 
+//Create IAM policy for IAM role
 resource "aws_iam_policy" "iam_policy_crc" {
 
   name        = "aws_iam_policy_for_terraform_crc_policy"
@@ -55,23 +58,42 @@ resource "aws_iam_policy" "iam_policy_crc" {
   })
 }
 
-resource "aws_s3_bucket" "dev_bucket" {
+// Create redirect bucket
+resource "aws_s3_bucket" "redir_bucket" {
   provider = aws.aws-s3
-  bucket = "crc-dev-bucket-captain"
+  bucket = "redir-bucket-crc"
   acl    = "private"
+
+  tags = {
+    Name = "Redirect CRC bucket"
+  }
 }
 
+//Create primary bucket
+resource aws_s3_bucket "primary_bucket" {
+  provider = aws.aws-s3
+  bucket = "primary-bucket-crc"
+  acl = "private"
+
+  tags = {
+    Name = "Primary CRC bucket"
+  }
+}
+
+//Attach policy to lambda IAM role
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
   role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.iam_policy_crc.arn
 }
 
+//Create lambda artifact payload
 data "archive_file" "zip_python_file" {
   type        = "zip"
   source_file = "${path.module}/lambda/visitor-count.py"
   output_path = "${path.module}/lambda/visitor-count.zip"
 }
 
+//Create lambda function URL - Replace with API Gateway creation later
 resource "aws_lambda_function_url" "url1" {
   function_name      = aws_lambda_function.visitor-count.function_name
   authorization_type = "NONE"
